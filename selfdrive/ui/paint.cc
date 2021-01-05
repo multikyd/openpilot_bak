@@ -70,7 +70,7 @@ bool car_space_to_full_frame(const UIState *s, float in_x, float in_y, float in_
 
 static void ui_draw_text(NVGcontext *vg, float x, float y, const char* string, float size, NVGcolor color, int font){
   nvgFontFaceId(vg, font);
-  nvgFontSize(vg, size*0.8);
+  nvgFontSize(vg, size);
   nvgFillColor(vg, color);
   nvgText(vg, x, y, string, NULL);
 }
@@ -449,7 +449,7 @@ static void ui_draw_standstill(UIState *s) {
     nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
     nvgFontSize(s->vg, 125);
     nvgFillColor(s->vg, COLOR_ORANGE_ALPHA(240));
-    ui_print(s, viz_standstill_x, viz_standstill_y, "STANDSTILL!");
+    ui_print(s, viz_standstill_x, viz_standstill_y, "STOPPED!");
     nvgFontSize(s->vg, 150);
     nvgFillColor(s->vg, COLOR_WHITE_ALPHA(240));
     ui_print(s, viz_standstill_x, viz_standstill_y+150, "%01d:%02d", minute, second);
@@ -578,13 +578,13 @@ static void ui_draw_vision_maxspeed(UIState *s) {
 
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
   const int text_x = viz_maxspeed_x + (viz_maxspeed_xo / 2) + (viz_maxspeed_w / 2);
-  ui_draw_text(s->vg, text_x, 142, "MAX", 26 * 2.2, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), s->font_sans_regular);
+  ui_draw_text(s->vg, text_x, 148, "MAX", 26 * 2.5, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), s->font_sans_regular);
 
   if (is_cruise_set && s->scene.controls_state.getEnabled()) {
     snprintf(maxspeed_str, sizeof(maxspeed_str), "%d", maxspeed_calc);
-    ui_draw_text(s->vg, text_x, 242, maxspeed_str, 48 * 2.3, COLOR_WHITE, s->font_sans_bold);
+    ui_draw_text(s->vg, text_x, 242, maxspeed_str, 48 * 2.5, COLOR_WHITE, s->font_sans_bold);
   } else {
-    ui_draw_text(s->vg, text_x, 242, "-", 42 * 2.3, COLOR_WHITE_ALPHA(100), s->font_sans_semibold);
+    ui_draw_text(s->vg, text_x, 242, "-", 42 * 2.5, COLOR_WHITE_ALPHA(100), s->font_sans_semibold);
   }
 }
 
@@ -632,15 +632,15 @@ static void ui_draw_vision_speedlimit(UIState *s) {
   // Draw "Speed Limit" Text
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
   color = is_speedlim_valid && s->is_ego_over_limit ? COLOR_WHITE : COLOR_BLACK;
-  ui_draw_text(s->vg, text_x, 142, "LIM", 26 * 2.2, color, s->font_sans_regular);
+  ui_draw_text(s->vg, text_x, 148, "LIM", 26 * 2.5, color, s->font_sans_regular);
   
   // Draw Speed Text
   color = s->is_ego_over_limit ? COLOR_WHITE : COLOR_BLACK;
   if (is_speedlim_valid) {
     snprintf(speedlim_str, sizeof(speedlim_str), "%d", speedlim_calc);
-    ui_draw_text(s->vg, text_x, 242, speedlim_str, 48*2.3, color, s->font_sans_bold);
+    ui_draw_text(s->vg, text_x, 242, speedlim_str, 48*2.5, color, s->font_sans_bold);
   } else {
-    ui_draw_text(s->vg, text_x, 242, "-", 42*2.3, color, s->font_sans_semibold);
+    ui_draw_text(s->vg, text_x, 242, "-", 42*2.5, color, s->font_sans_semibold);
   }
 }
 
@@ -862,9 +862,9 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
   int bb_h = 5;
   NVGcolor lab_color = COLOR_WHITE_ALPHA(200);
   NVGcolor uom_color = COLOR_WHITE_ALPHA(200);
-  int value_fontSize=30*0.8;
-  int label_fontSize=15*0.8;
-  int uom_fontSize = 15*0.8;
+  int value_fontSize=30;
+  int label_fontSize=15;
+  int uom_fontSize = 15;
   int bb_uom_dx =  (int)(bb_w /2 - uom_fontSize*2.5) ;
   //CPU TEMP
     if (true) {
@@ -990,9 +990,9 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
   int bb_h = 5;
   NVGcolor lab_color = COLOR_WHITE_ALPHA(200);
   NVGcolor uom_color = COLOR_WHITE_ALPHA(200);
-  int value_fontSize=30*0.8;
-  int label_fontSize=15*0.8;
-  int uom_fontSize = 15*0.8;
+  int value_fontSize=30;
+  int label_fontSize=15;
+  int uom_fontSize = 15;
   int bb_uom_dx =  (int)(bb_w /2 - uom_fontSize*2.5) ;
 
   //add visual radar relative distance
@@ -1055,7 +1055,7 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
     } else {
       snprintf(uom_str, sizeof(uom_str), "mi/h");
     }
-    bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "REL SPEED",
+    bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "REL SPD",
         bb_rx, bb_ry, bb_uom_dx,
         val_color, lab_color, uom_color,
         value_fontSize, label_fontSize, uom_fontSize );
@@ -1079,7 +1079,7 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
       snprintf(val_str, sizeof(val_str), "%.1f°",(s->scene.angleSteers));
 
       snprintf(uom_str, sizeof(uom_str), "");
-    bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "REAL STEER",
+    bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "REAL STR",
         bb_rx, bb_ry, bb_uom_dx,
         val_color, lab_color, uom_color,
         value_fontSize, label_fontSize, uom_fontSize );
@@ -1106,7 +1106,7 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
        snprintf(val_str, sizeof(val_str), "-");
     }
       snprintf(uom_str, sizeof(uom_str), "");
-    bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "DESIR STEER",
+    bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "DESIR STR",
         bb_rx, bb_ry, bb_uom_dx,
         val_color, lab_color, uom_color,
         value_fontSize, label_fontSize, uom_fontSize );

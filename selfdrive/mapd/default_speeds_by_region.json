@@ -262,6 +262,18 @@
         }
       },
       {
+        "speed": "30", 
+        "tags": {
+          "maxspeed": "30"
+        }
+      }, 
+      {
+        "speed": "50", 
+        "tags": {
+          "maxspeed": "50"
+        }
+      }, 
+      {
         "speed": "60", 
         "tags": {
           "maxspeed": "60"

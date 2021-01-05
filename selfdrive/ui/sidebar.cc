@@ -57,7 +57,7 @@ static void ui_draw_sidebar_battery_text(UIState *s) {
   char battery_str[7];
   snprintf(battery_str, sizeof(battery_str), "%d%%%s", s->scene.thermal.getBatteryPercent(), s->scene.thermal.getBatteryStatus() == "Charging" ? "+" : "-");  
   nvgFillColor(s->vg, COLOR_WHITE);
-  nvgFontSize(s->vg, 44*0.8);
+  nvgFontSize(s->vg, 44);
   nvgFontFaceId(s->vg, s->font_sans_regular);
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
   nvgTextBox(s->vg, battery_img_x, battery_img_y, battery_img_w, battery_str, NULL);
@@ -76,7 +76,7 @@ static void ui_draw_sidebar_network_type(UIState *s) {
   const int network_w = 100;
   const char *network_type = network_type_map[s->scene.thermal.getNetworkType()];
   nvgFillColor(s->vg, COLOR_WHITE);
-  nvgFontSize(s->vg, 48*0.8);
+  nvgFontSize(s->vg, 48);
   nvgFontFaceId(s->vg, s->font_sans_regular);
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
   nvgTextBox(s->vg, network_x, network_y, network_w, network_type ? network_type : "--", NULL);
@@ -108,19 +108,19 @@ static void ui_draw_sidebar_metric(UIState *s, const char* label_str, const char
 
   if (!message_str) {
     nvgFillColor(s->vg, COLOR_WHITE);
-    nvgFontSize(s->vg, 78*0.8);
+    nvgFontSize(s->vg, 78);
     nvgFontFaceId(s->vg, s->font_sans_bold);
     nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
     nvgTextBox(s->vg, metric_x + 50, metric_y + 50, metric_w - 60, value_str, NULL);
 
     nvgFillColor(s->vg, COLOR_WHITE);
-    nvgFontSize(s->vg, 48*0.8);
+    nvgFontSize(s->vg, 48);
     nvgFontFaceId(s->vg, s->font_sans_regular);
     nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
     nvgTextBox(s->vg, metric_x + 50, metric_y + 50 + 66, metric_w - 60, label_str, NULL);
   } else {
     nvgFillColor(s->vg, COLOR_WHITE);
-    nvgFontSize(s->vg, 48*0.8);
+    nvgFontSize(s->vg, 48);
     nvgFontFaceId(s->vg, s->font_sans_bold);
     nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
     nvgTextBox(s->vg, metric_x + 35, metric_y + (strchr(message_str, '\n') ? 40 : 50), metric_w - 50, message_str, NULL);
