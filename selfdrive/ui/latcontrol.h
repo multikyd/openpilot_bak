@@ -27,8 +27,8 @@ bool control_button_clicked2(int touch_x, int touch_y) {
 }
 
 bool control_button_screenshot(int touch_x, int touch_y) {
-  if (touch_x >= 0 && touch_x <= 800) {
-    if (touch_y >= 600 && touch_y <= 1080) {
+  if (touch_x >= 0 && touch_x <= 700) {
+    if (touch_y >= 700 && touch_y <= 1080) {
       return true;
     }
   }
@@ -119,8 +119,8 @@ bool latcontrol( UIState *s, int touch_x, int touch_y ) {
   }
 
   if ((control_button_screenshot(touch_x,touch_y)) && (s->scene.uilayout_sidebarcollapsed == true)) {
-    system("su -c 'mkdir -p /data/screenshots; screencap -p /data/screenshots/sc_$(date '+%Y-%m-%d_%H%M%S').png'");
     system("su -c 'touch /data/screenshots/camdetect'");
+    system("su -c 'mkdir -p /data/screenshots; screencap -p /data/screenshots/sc_$(date '+%Y-%m-%d_%H%M%S').png'");
     s->sound->play(AudibleAlert::CHIME_WARNING1);
     touched = true;
   }
