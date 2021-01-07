@@ -11,12 +11,12 @@ import common.CTime1000 as tm
 
 LongCtrlState = log.ControlsState.LongControlState
 
-STOPPING_EGO_SPEED = 0.3
+STOPPING_EGO_SPEED = 0.5
 STOPPING_TARGET_SPEED_OFFSET = 0.01
 STARTING_TARGET_SPEED = 0.5
 BRAKE_THRESHOLD_TO_PID = 0.2
 
-BRAKE_STOPPING_TARGET = 0.7  # apply at least this amount of brake to maintain the vehicle stationary
+BRAKE_STOPPING_TARGET = 0.5  # apply at least this amount of brake to maintain the vehicle stationary
 
 RATE = 100.0
 
@@ -25,7 +25,7 @@ def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
                              output_gb, brake_pressed, cruise_standstill, stop, gas_pressed, min_speed_can):
   """Update longitudinal control state machine"""
   stopping_target_speed = min_speed_can + STOPPING_TARGET_SPEED_OFFSET
-  stopping_condition = stop or (v_ego < 0.3 and cruise_standstill) or \
+  stopping_condition = stop or (v_ego < 2.0 and cruise_standstill) or \
                        (v_ego < STOPPING_EGO_SPEED and \
                         ((v_pid < stopping_target_speed and v_target < stopping_target_speed) or
                         brake_pressed))
@@ -60,9 +60,9 @@ def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
 class LongControl():
   def __init__(self, CP, compute_gb, candidate):
     self.long_control_state = LongCtrlState.off  # initialized to off
-    kdBP = [0., 2.237, 33, 55., 78]
-    kdBP = [i * CV.MPH_TO_MS for i in kdBP]
-    kdV = [1.5, 0.05, 0.4, 0.8, 1.2]
+    kdBP = [0., 16., 35.]
+    kdV = [0.05, 1.0285 * 1.45, 1.8975 * 0.8]
+
     self.pid = LongPIDController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                                  (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
                                  (kdBP, kdV),
@@ -152,19 +152,14 @@ class LongControl():
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
 
       if hasLead and radarState.leadOne.status and 4 < dRel <= 35 and output_gb < 0 and vRel < 0 and (CS.vEgo*CV.MS_TO_KPH) <= 65:
-        vd_r = (CS.vEgo*CV.MS_TO_KPH)/dRel
         multiplier = max((self.v_pid/(max(v_target_future, 1))), 1)
-        multiplier = min(multiplier, 4)
-        if vd_r >= 1.5:
-          output_gb *= multiplier
-          output_gb = clip(output_gb, -brake_max, gas_max)
-        else:
-          output_gb *= 1.5
-      elif hasLead and radarState.leadOne.status and 7 < dRel < 17 and abs(vRel*3.6) > 5 and output_gb > 0 and (CS.vEgo * CV.MS_TO_KPH) < 25:
-        output_gb *= 1.3
+        multiplier = clip(multiplier, 1.1, 3)
+        output_gb *= multiplier
         output_gb = clip(output_gb, -brake_max, gas_max)
+      elif hasLead and radarState.leadOne.status and 4 < dRel <= 35 and output_gb > 0 and vRel < 0 and (CS.vEgo*CV.MS_TO_KPH) <= 65:
+        output_gb = 0.0
       elif hasLead and radarState.leadOne.status and 4 < dRel < 100 and output_gb < 0:
-        output_gb *= 1.4
+        output_gb *= 1.1
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
@@ -174,7 +169,7 @@ class LongControl():
       # Keep applying brakes until the car is stopped
       factor = 1
       if hasLead:
-        factor = interp(dRel,[2.0,3.0,4.0,5.0,6.0,7.0,8.0], [5,3,1,5.7,0.5,0.3,0.0])
+        factor = interp(dRel,[2.0,3.0,4.0,5.0,6.0,7.0,8.0], [5,3,1.3,0.7,0.5,0.3,0.0])
       if not CS.standstill or output_gb > -BRAKE_STOPPING_TARGET:
         output_gb -= CP.stoppingBrakeRate / RATE * factor
       output_gb = clip(output_gb, -brake_max, gas_max)
@@ -206,7 +201,7 @@ class LongControl():
     else:
       self.long_stat = "---"
 
-    str_log3 = 'LS={:s}  GS={:01.2f}/{:01.2f}  BK={:01.2f}/{:01.2f}  GB={:+04.2f}  TG=P:{:05.2f}/V:{:05.2f}/F:{:05.2f}/A:{:+04.2f}  GS={}'.format(self.long_stat, final_gas, gas_max, abs(final_brake), abs(brake_max), output_gb, self.v_pid, v_target, a_target, v_target_future, CS.gasPressed)
+    str_log3 = 'LS={:s}  GS={:01.2f}/{:01.2f}  BK={:01.2f}/{:01.2f}  GB={:+04.2f}  TG=P:{:05.2f}/F:{:05.2f}/m:{:.1f}/vr:{:+04.1f}'.format(self.long_stat, final_gas, gas_max, abs(final_brake), abs(brake_max), output_gb, abs(self.v_pid), abs(v_target_future), multiplier, vRel)
     trace1.printf2('{}'.format(str_log3))
 
     return final_gas, final_brake
