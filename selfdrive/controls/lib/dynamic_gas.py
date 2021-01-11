@@ -42,8 +42,8 @@ class DynamicGas:
         y = [1.0, 0.8, 0.0]
         gas_mod *= interp(self.lead_data['x_lead'], x, y)
 
-        if not self.CP.enableGasInterceptor:  # this will hopefuly let TSS2 use dynamic gas, need to tune
-          gas_mod *= 0.33
+        #if not self.CP.enableGasInterceptor:  # this will hopefuly let TSS2 use dynamic gas, need to tune
+        #  gas_mod *= 0.33
         new_gas = gas + gas_mod
 
         x = [1.78816, 6.0, 8.9408]  # slowly ramp mods down as we approach 20 mph
@@ -73,6 +73,7 @@ class DynamicGas:
     #y = [0.234, 0.237, 0.246, 0.26, 0.279, 0.297, 0.332, 0.354, 0.368, 0.377, 0.389, 0.399, 0.411, 0.45, 0.504, 0.558, 0.617]
     x = [0.0, 1.4082, 2.8031, 4.2266, 5.3827, 6.1656, 7.2478, 8.2831, 10.2447, 12.964, 15.423, 18.119, 20.117, 24.4661, 29.0581, 32.7101, 35.7633]
     y = [0.35587, 0.46747, 0.41816, 0.33261, 0.27844, 0.2718, 0.28396, 0.29537, 0.30647, 0.31161, 0.3168, 0.3272, 0.34, 0.3824, 0.44, 0.4968, 0.56]
+    #y = np.array(y) * 1.1
     self.supported_car = True
 #    self.supported_car = False
 #    if self.CP.enableGasInterceptor:

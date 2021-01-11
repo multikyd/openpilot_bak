@@ -61,7 +61,7 @@ class LongControl():
   def __init__(self, CP, compute_gb, candidate):
     self.long_control_state = LongCtrlState.off  # initialized to off
     kdBP = [0., 16., 35.]
-    kdV = [0.05, 1.0285 * 1.45, 1.8975 * 0.8]
+    kdV = [0.3, 1.7, 1.5]
 
     self.pid = LongPIDController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                                  (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
@@ -90,6 +90,8 @@ class LongControl():
     brake_max = interp(CS.vEgo, CP.brakeMaxBP, CP.brakeMaxV)
 
     multiplier = 0
+    multiplier2 = 0
+    multiplier3 = 0
     vRel = 0
 
     if self.enable_dg:
@@ -155,15 +157,20 @@ class LongControl():
 
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
 
-      if hasLead and radarState.leadOne.status and 4 < dRel <= 35 and output_gb < 0 and vRel < 0 and (CS.vEgo*CV.MS_TO_KPH) <= 65:
+      if hasLead and radarState.leadOne.status and 4 < dRel <= 55 and output_gb < 0 and vRel < 0:
         multiplier = max((self.v_pid/(max(v_target_future, 1))), 1)
-        multiplier = clip(multiplier, 1.1, 3)
+        multiplier = clip(multiplier, 1.2, 3.5)
         output_gb *= multiplier
+        if dRel*2 < CS.vEgo*3.6 and dRel <= 20:
+          multiplier2 = interp(dRel, [4, 20], [2, 1])
+        elif dRel*1.5 < CS.vEgo*3.6 and dRel <= 20:
+          multiplier2 = interp(dRel, [4, 20], [1.5, 1])
+          output_gb *= multiplier3
         output_gb = clip(output_gb, -brake_max, gas_max)
-      elif hasLead and radarState.leadOne.status and 4 < dRel <= 35 and output_gb > 0 and vRel < 0 and (CS.vEgo*CV.MS_TO_KPH) <= 65:
-        output_gb = 0.0
-      elif hasLead and radarState.leadOne.status and 4 < dRel < 100 and output_gb < 0:
-        output_gb *= 1.1
+      elif hasLead and radarState.leadOne.status and 4 < dRel <= 55 and output_gb > 0 and vRel < 0:
+        multiplier3 = interp(abs(vRel*3.6), [0, 1, 2], [1.0, 0.5, 0.0])
+        output_gb *= multiplier3
+        output_gb = clip(output_gb, -brake_max, gas_max)
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
@@ -173,7 +180,7 @@ class LongControl():
       # Keep applying brakes until the car is stopped
       factor = 1
       if hasLead:
-        factor = interp(dRel,[2.0,3.0,4.0,5.0,6.0,7.0,8.0], [5,3,1.3,0.7,0.5,0.3,0.0])
+        factor = interp(dRel,[2.0,3.0,4.0,5.0,6.0,7.0,8.0], [6,3.5,1.5,0.7,0.5,0.3,0.0])
       if not CS.standstill or output_gb > -BRAKE_STOPPING_TARGET:
         output_gb -= CP.stoppingBrakeRate / RATE * factor
       output_gb = clip(output_gb, -brake_max, gas_max)
@@ -205,7 +212,7 @@ class LongControl():
     else:
       self.long_stat = "---"
 
-    str_log3 = 'LS={:s}  GS={:01.2f}/{:01.2f}  BK={:01.2f}/{:01.2f}  GB={:+04.2f}  TG=P:{:05.2f}/F:{:05.2f}/m:{:.1f}/vr:{:+04.1f}'.format(self.long_stat, final_gas, gas_max, abs(final_brake), abs(brake_max), output_gb, abs(self.v_pid), abs(v_target_future), multiplier, vRel)
+    str_log3 = 'LS={:s}  GS={:01.2f}/{:01.2f}  BK={:01.2f}/{:01.2f}  GB={:+04.2f}  TG=P:{:05.2f}/F:{:05.2f}/m:{:.1f}/m2:{:.1f}/m3:{:.1f}/vr:{:+04.1f}'.format(self.long_stat, final_gas, gas_max, abs(final_brake), abs(brake_max), output_gb, abs(self.v_pid), abs(v_target_future), multiplier, multiplier2, multiplier3, vRel)
     trace1.printf2('{}'.format(str_log3))
 
     return final_gas, final_brake
